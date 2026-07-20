@@ -3,6 +3,10 @@ from app.components.header import show_header
 from app.components.metrics import show_metrics
 from app.ai.recommendation_engine import generate_ai_summary
 from app.components.intelligence_center import show_intelligence_center
+from app.database.loader import load_database
+from app.database.repository import DatabaseRepository
+from app.database.validator import validate_database
+from app.analytics.kpi_engine import calculate_kpis
 
 from scripts.betting_intelligence import BettingIntelligence
 from app.components.sidebar import show_sidebar
@@ -70,26 +74,21 @@ div[data-testid="metric-container"]{
 # LOAD DATABASE
 # ==================================================
 
-@st.cache_data
-def load_database(file):
-
-    bets = pd.read_excel(
-        file,
-        sheet_name="Bets"
-    )
-
-    selections = pd.read_excel(
-        file,
-        sheet_name="Selections"
-    )
-
-    return bets, selections
-
-
 if uploaded_file:
 
+    repository = DatabaseRepository(
+        uploaded_file
+    )
 
-    bets, selections = load_database(uploaded_file)
+    bets = repository.get_bets()
+
+    selections = repository.get_selections()
+
+    if not validate_database(
+        bets,
+        selections,
+    ):
+        st.stop()
 
     # ==============================================
     # SIDEBAR FILTERS
@@ -117,42 +116,28 @@ if uploaded_file:
     # KPI CALCULATIONS
     # ==============================================
 
-    total_bets = len(bets)
+    kpis = calculate_kpis(bets)
 
-    winning_bets = len(
-        bets[bets["profit"] > 0]
-    )
+    total_bets = kpis["total_bets"]
 
-    losing_bets = len(
-        bets[bets["profit"] <= 0]
-    )
+    winning_bets = kpis["winning_bets"]
 
-    total_stake = bets["stake"].sum()
+    losing_bets = kpis["losing_bets"]
 
-    total_returns = bets["returns"].sum()
+    total_stake = kpis["total_stake"]
 
-    total_profit = bets["profit"].sum()
+    total_returns = kpis["total_returns"]
 
-    average_stake = bets["stake"].mean()
+    total_profit = kpis["total_profit"]
 
-    average_odds = bets["total_odds"].mean()
+    average_stake = kpis["average_stake"]
 
-    roi = 0
+    average_odds = kpis["average_odds"]
 
-    if total_stake > 0:
+    roi = kpis["roi"]
 
-        roi = (
-            total_profit / total_stake
-        ) * 100
-
-    win_rate = 0
-
-    if total_bets > 0:
-
-        win_rate = (
-            winning_bets / total_bets
-        ) * 100
-            # ==================================================
+    win_rate = kpis["win_rate"]
+    # ==================================================
     # EXECUTIVE OVERVIEW
     # ==================================================
 
