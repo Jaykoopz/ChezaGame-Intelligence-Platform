@@ -1,4 +1,9 @@
+from app.analytics.filters import show_filters
+from app.components.header import show_header
+from app.components.metrics import show_metrics
+
 from scripts.betting_intelligence import BettingIntelligence
+from app.components.sidebar import show_sidebar
 from scripts.pattern_detector import PatternDetector
 
 import streamlit as st
@@ -15,6 +20,10 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+#
+
+page, uploaded_file = show_sidebar()
 
 # ==================================================
 # CUSTOM CSS
@@ -46,22 +55,11 @@ div[data-testid="metric-container"]{
 # TITLE
 # ==================================================
 
-st.title("📊 ChezaGame Betting Analytics System")
-
-st.caption(
-    "AI-Powered Betting Analytics & Intelligence Dashboard"
-)
-
 # ==================================================
 # SIDEBAR
 # ==================================================
 
-st.sidebar.title("Navigation")
 
-uploaded = st.sidebar.file_uploader(
-    "Upload CBAS_Database.xlsx",
-    type=["xlsx"]
-)
 
 # ==================================================
 # LOAD DATA
@@ -84,55 +82,18 @@ def load_database(file):
     )
 
     return bets, selections
-if uploaded:
 
-    bets, selections = load_database(uploaded)
+
+if uploaded_file:
+
+
+    bets, selections = load_database(uploaded_file)
 
     # ==============================================
     # SIDEBAR FILTERS
     # ==============================================
 
-    st.sidebar.header("Filters")
-
-    results = sorted(
-        bets["result"].dropna().unique()
-    )
-
-    selected_results = st.sidebar.multiselect(
-        "Bet Result",
-        results,
-        default=results
-    )
-
-    min_stake = float(
-        bets["stake"].min()
-    )
-
-    max_stake = float(
-        bets["stake"].max()
-    )
-
-    stake_range = st.sidebar.slider(
-        "Stake Range (KES)",
-        min_value=min_stake,
-        max_value=max_stake,
-        value=(min_stake, max_stake)
-    )
-
-    min_odds = float(
-        bets["total_odds"].min()
-    )
-
-    max_odds = float(
-        bets["total_odds"].max()
-    )
-
-    odds_range = st.sidebar.slider(
-        "Odds Range",
-        min_value=min_odds,
-        max_value=max_odds,
-        value=(min_odds, max_odds)
-    )
+    selected_results, stake_range, odds_range = show_filters(bets)
 
     # ==============================================
     # APPLY FILTERS
@@ -198,47 +159,16 @@ if uploaded:
     st.header("📈 Executive Overview")
 
     c1, c2, c3, c4 = st.columns(4)
-
-    c1.metric(
-        "Total Bets",
-        f"{total_bets:,}"
-    )
-
-    c2.metric(
-        "Win Rate",
-        f"{win_rate:.2f}%"
-    )
-
-    c3.metric(
-        "ROI",
-        f"{roi:.2f}%"
-    )
-
-    c4.metric(
-        "Net Profit",
-        f"KES {total_profit:,.2f}"
-    )
-
-    c5, c6, c7, c8 = st.columns(4)
-
-    c5.metric(
-        "Winning Bets",
-        winning_bets
-    )
-
-    c6.metric(
-        "Losing Bets",
-        losing_bets
-    )
-
-    c7.metric(
-        "Total Stake",
-        f"KES {total_stake:,.2f}"
-    )
-
-    c8.metric(
-        "Total Returns",
-        f"KES {total_returns:,.2f}"
+    
+    show_metrics(
+        total_bets=total_bets,
+        win_rate=win_rate,
+        roi=roi,
+        total_profit=total_profit,
+        winning_bets=winning_bets,
+        losing_bets=losing_bets,
+        total_stake=total_stake,
+        total_returns=total_returns
     )
 
     st.divider()
