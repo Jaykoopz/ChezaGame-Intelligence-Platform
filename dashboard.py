@@ -1,9 +1,8 @@
 from app.analytics.filters import show_filters
 from app.components.header import show_header
 from app.components.metrics import show_metrics
-from app.components.cheza_ai import show_cheza_ai
-from app.components.ai_briefing import show_ai_briefing
 from app.ai.recommendation_engine import generate_ai_summary
+from app.components.intelligence_center import show_intelligence_center
 
 from scripts.betting_intelligence import BettingIntelligence
 from app.components.sidebar import show_sidebar
@@ -175,26 +174,13 @@ if uploaded_file:
     )
 
     ai_summary = generate_ai_summary(
-    win_rate=win_rate,
-    roi=roi,
-    average_odds=average_odds,
-    total_profit=total_profit,
-)
-
-    show_ai_briefing(
-    score=ai_summary["score"],
-    risk=ai_summary["risk"],
-    confidence=ai_summary["confidence"],
-    insight=ai_summary["insight"],
-    recommendation=ai_summary["recommendation"],
-)
-
-    show_cheza_ai(
-        win_rate=win_rate,
-        roi=roi,
-        total_profit=total_profit,
-        average_odds=average_odds,
+      win_rate=win_rate,
+      roi=roi,
+      average_odds=average_odds,
+      total_profit=total_profit,
     )
+
+    show_intelligence_center(ai_summary)
 
     st.divider()
 
